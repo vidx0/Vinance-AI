@@ -1,0 +1,19 @@
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{% block title %}Budget AI{% endblock %}</title>
+		<link rel="stylesheet" href="/static/styles.css" />
+	</head>
+	<body>
+		<nav>
+			<ul>
+				<li><a href="{{ url_for('home') }}">Budget</a></li>
+				<li><a href="{{ url_for('chatbot') }}">AI Chatbot</a></li>
+				<li><a href="{{ url_for('stocks') }}">Stock Predictions</a></li>
+			</ul>
+		</nav>
+		<main>{% block content %}{% endblock %}</main>
+		<script src="{{ url_for('static', filename='scripts.js') }}"></script>
+	</body>
+</html>

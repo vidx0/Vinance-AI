@@ -1,0 +1,13 @@
+{% extends 'layout.html' %} {% block title %}Budget Manager{% endblock %} {%
+block content %}
+<h1>Budget Manager</h1>
+<div id="budget-container">
+	<label for="income">Income:</label>
+	<input type="number" id="income" placeholder="Enter monthly income" />
+	<label for="expense">Expenses:</label>
+	<input type="number" id="expense" placeholder="Enter total expenses" />
+	<button onclick="updateBudget()">Update</button>
+	<h3>Savings: <span id="savings">$0</span></h3>
+	<h3>Leftover: <span id="leftover">$0</span></h3>
+</div>
+{% endblock %}
