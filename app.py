@@ -1,18 +1,36 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
+from flask_login import LoginManager
+import os
 
+# Initialize Flask app
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# Configuration
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-@app.route('/chatbot')
-def chatbot():
-    return render_template('chatbot.html')
+# Ensure the database file exists
+if not os.path.exists(DB_PATH):
+    open(DB_PATH, 'w').close()
 
-@app.route('/stocks')
-def stocks():
-    return render_template('stocks.html')
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = "your_secret_key_here"
 
-if __name__ == '__main__':
+# Initialize extensions
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
+
+# Import routes after initializing app
+from routes import *
+
+# Create database tables if they don't exist
+with app.app_context():
+    db.create_all()
+
+if __name__ == "__main__":
     app.run(debug=True)
