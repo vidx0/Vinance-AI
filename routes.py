@@ -101,4 +101,81 @@ def logout():
 
 
 
+@app.route("/add_income", methods=["POST"])
+@login_required
+def add_income():
+   try:
+       amount = float(request.form.get("amount"))
+       pay_frequency = request.form.get("pay_frequency")
+      
+       new_income = Transaction(
+           user_id=current_user.id,
+           type='income',
+           category='Paycheck',
+           amount=amount,
+           date=datetime.utcnow()
+       )
+      
+       current_user.pay_frequency = pay_frequency
+       current_user.last_paycheck_date = datetime.utcnow()
+      
+       db.session.add(new_income)
+       db.session.commit()
+       flash("Paycheck added successfully!", "success")
+   except ValueError:
+       flash("Invalid amount entered", "danger")
+   except Exception as e:
+       flash("Error adding paycheck", "danger")
+  
+   return redirect(url_for("home"))
+
+
+
+
+
+
+# Paycheck update route
+@app.route("/update_paycheck", methods=["POST"])
+@login_required
+def update_paycheck():
+   salary = request.form.get("salary")
+   pay_frequency = request.form.get("pay_frequency")
+
+
+   if salary and pay_frequency:
+       current_user.salary = float(salary)
+       current_user.pay_frequency = pay_frequency
+       current_user.last_paycheck_date = datetime.utcnow()
+       db.session.commit()
+       flash("Paycheck details updated!", "success")
+
+
+   return redirect(url_for("home"))
+
+
+@app.route("/add_expense", methods=["POST"])
+@login_required
+def add_expense():
+   try:
+       category = request.form.get("category")
+       amount = float(request.form.get("amount"))
+      
+       new_expense = Transaction(
+           user_id=current_user.id,
+           type='expense',
+           category=category,
+           amount=amount,
+           date=datetime.utcnow()
+       )
+      
+       db.session.add(new_expense)
+       db.session.commit()
+       flash("Expense added successfully!", "success")
+   except ValueError:
+       flash("Invalid amount entered", "danger")
+   except Exception as e:
+       flash("Error adding expense", "danger")
+  
+   return redirect(url_for("home"))
+
 
