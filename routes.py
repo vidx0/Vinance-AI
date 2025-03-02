@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request, flash
+from flask import jsonify, render_template, redirect, session, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db, bcrypt, login_manager
 from models import User, Transaction
@@ -178,4 +178,22 @@ def add_expense():
   
    return redirect(url_for("home"))
 
+@app.route('/chatbot/respond', methods=['POST'])
+def chatbot_respond():
+    user_message = request.json.get("message", "")
+    
+    # Retrieve conversation history from session
+    if 'chat_history' not in session:
+        session['chat_history'] = []
+    
+    session['chat_history'].append({"user": user_message})
 
+    # Placeholder AI logic
+    if "budget" in user_message.lower():
+        bot_response = "It looks like you're asking about your budget. What specific details do you need?"
+    else:
+        bot_response = "I'm here to help with budgeting! Try asking about your savings or expenses."
+
+    session['chat_history'].append({"bot": bot_response})
+    
+    return jsonify({"response": bot_response, "history": session['chat_history']})

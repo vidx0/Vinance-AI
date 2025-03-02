@@ -28,3 +28,4 @@ class Transaction(db.Model):
     category = db.Column(db.String(100), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
+
