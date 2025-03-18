@@ -1,7 +1,79 @@
 {% extends 'layout.html' %} {% block title %}Stock Predictions{% endblock %} {%
 block content %}
-<h1>Stock Predictions</h1>
-<div id="stocks-container">
-	<p>Stock predictions will be displayed here.</p>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h2 class="text-center">Stock Prediction AI</h2>
+        
+        <div class="card p-4 mt-3">
+            <h4>Enter a Stock Symbol</h4>
+            <input type="text" id="stockSymbol" class="form-control mt-2" placeholder="e.g., AAPL, TSLA, MSFT">
+            <button class="btn btn-primary mt-3" onclick="trainModel()">Train Model</button>
+            <button class="btn btn-success mt-3" onclick="predictStock()">Predict Price</button>
+        </div>
+
+        <div id="statusMessage" class="mt-4 text-center"></div>
+
+        <div class="card p-4 mt-3">
+            <h4>Prediction Result</h4>
+            <p id="predictionResult" class="text-center text-primary"></p>
+        </div>
+    </div>
+
+    <script>
+        function trainModel() {
+            let stockSymbol = document.getElementById('stockSymbol').value.trim().toUpperCase();
+            if (!stockSymbol) {
+                alert("Please enter a stock symbol!");
+                return;
+            }
+
+            document.getElementById('statusMessage').innerHTML = `<p class="text-info">Training model for ${stockSymbol}...</p>`;
+
+            fetch('/train', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock_symbol: stockSymbol })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('statusMessage').innerHTML = `<p class="text-danger">${data.error}</p>`;
+                } else {
+                    document.getElementById('statusMessage').innerHTML = `<p class="text-success">${data.message}</p>`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function predictStock() {
+            let stockSymbol = document.getElementById('stockSymbol').value.trim().toUpperCase();
+            if (!stockSymbol) {
+                alert("Please enter a stock symbol!");
+                return;
+            }
+
+            document.getElementById('statusMessage').innerHTML = `<p class="text-info">Predicting price for ${stockSymbol}...</p>`;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stock_symbol: stockSymbol })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('statusMessage').innerHTML = `<p class="text-danger">${data.error}</p>`;
+                } else {
+                    document.getElementById('predictionResult').innerHTML = `Predicted Closing Price: <strong>$${data.predicted_price.toFixed(2)}</strong>`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
 </div>
 {% endblock %}
+
+
+
+

@@ -1,3 +1,4 @@
+import traceback
 from flask import jsonify, render_template, redirect, session, url_for, request, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db, bcrypt, login_manager
@@ -191,8 +192,8 @@ from models import Transaction, Debt
 from app import db
 
 # Load AI model and scaler
-model = joblib.load("models/budget_ai_model.pkl")
-scaler = joblib.load("models/scaler.pkl")
+model = joblib.load("AI_models/budget_ai_model.pkl")
+scaler = joblib.load("AI_models/scaler.pkl")
 
 @app.route('/chatbot/respond', methods=['POST'])
 def chatbot_respond():
@@ -251,7 +252,7 @@ def chatbot_respond():
             # **AI Prediction**
             prediction = model.predict(user_scaled)[0]  # 1 = Affordable, 0 = Not Affordable
 
-            if prediction == 1:
+            if prediction == 0:
                 bot_response = f"Yes! You can afford **${purchase_price:.2f}**. Would you like a savings plan?"
             else:
                 bot_response = (
@@ -265,3 +266,48 @@ def chatbot_respond():
     # **Ensure response is always returned**
     session.setdefault('chat_history', []).append({"user": user_message, "bot": bot_response})
     return jsonify({"response": bot_response, "history": session['chat_history']})
+
+
+
+from AI_models.train_stock_model import train_stock_model
+from AI_models.predict_stock import predict_stock
+
+
+@app.route('/train', methods=['POST'])
+def train():
+    """Train the stock prediction model for a given stock."""
+    data = request.get_json()
+    stock_symbol = data.get('stock_symbol', '').upper()
+
+    if not stock_symbol:
+        return jsonify({"error": "Stock symbol is required"}), 400
+
+    try:
+        train_stock_model(stock_symbol)
+        return jsonify({"message": f"Model for {stock_symbol} trained successfully!"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    """Predict the next day's closing price for a given stock."""
+    data = request.get_json()
+    stock_symbol = data.get('stock_symbol', '').upper()
+
+    if not stock_symbol:
+        return jsonify({"error": "Stock symbol is required"}), 400
+
+    try:
+        predicted_price = predict_stock(stock_symbol)
+
+        if predicted_price is None:
+            app.logger.error(f"Prediction failed for {stock_symbol}")
+            return jsonify({"error": "Prediction failed"}), 500
+
+        return jsonify({"stock_symbol": stock_symbol, "predicted_price": float(predicted_price)})
+    
+    except Exception as e:
+        error_message = traceback.format_exc()  # Get full error details
+        app.logger.error(f"Prediction failed for {stock_symbol}: {error_message}")
+        return jsonify({"error": "Prediction failed", "details": str(e)}), 500  # Return error details
+

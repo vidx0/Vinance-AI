@@ -2,8 +2,8 @@ import pandas as pd
 import joblib
 
 # Load the trained model and scaler
-model = joblib.load("models/budget_ai_model.pkl")
-scaler = joblib.load("models/scaler.pkl")
+model = joblib.load("AI_models/budget_ai_model.pkl")
+scaler = joblib.load("AI_models/scaler.pkl")
 
 # Load column names from CSV (excluding target)
 df = pd.read_csv("financial_data.csv")

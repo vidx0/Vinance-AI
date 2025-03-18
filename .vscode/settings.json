@@ -1,0 +1,6 @@
+{
+	"python.analysis.extraPaths": [
+		"./models",
+		"./AI_models"
+	]
+}

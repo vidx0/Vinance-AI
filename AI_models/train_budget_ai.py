@@ -40,5 +40,5 @@ accuracy = accuracy_score(y_test, y_pred)
 print(f"Model Accuracy: {accuracy * 100:.2f}%")
 
 # Save model and scaler
-joblib.dump(model, "models/budget_ai_model.pkl")
-joblib.dump(scaler, "models/scaler.pkl")
+joblib.dump(model, "AI_models/budget_ai_model.pkl")
+joblib.dump(scaler, "AI_models/scaler.pkl")
