@@ -7,6 +7,7 @@ from sklearn.metrics import mean_absolute_error
 import joblib
 import sys
 from AI_models.get_stock_data import fetch_stock_data  # Import fetch function
+from AI_models.get_sentiment import get_news_sentiment
 
 def train_stock_model(stock_symbol):
     """Train a stock prediction model for a given stock symbol."""
@@ -19,7 +20,7 @@ def train_stock_model(stock_symbol):
     df = pd.read_csv(file_path)
 
     # Add placeholder sentiment score (for future integration)
-    df['Sentiment'] = 0.0  
+    df['Sentiment'] = get_news_sentiment(stock_symbol)  
 
     # Shift 'Close' column to create labels (predicting next day's Close price)
     df['Future_Close'] = df['Close'].shift(-1)
@@ -54,8 +55,7 @@ def train_stock_model(stock_symbol):
     joblib.dump(model, model_filename)
     joblib.dump(scaler, scaler_filename)
 
-    print(f"Training complete. Model saved to {model_filename}")
-
+    print(f"Training complete. Model saved to {model_filename}") 
 # Run script with a stock symbol argument
 if __name__ == "__main__":
     if len(sys.argv) != 2:

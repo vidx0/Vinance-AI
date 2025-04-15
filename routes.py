@@ -194,6 +194,10 @@ from app import db
 # Load AI model and scaler
 model = joblib.load("AI_models/budget_ai_model.pkl")
 scaler = joblib.load("AI_models/scaler.pkl")
+import requests
+
+
+OPENROUTER_API_KEY = "sk-replace"  # Replace with your actual OpenRouter API key
 
 @app.route('/chatbot/respond', methods=['POST'])
 def chatbot_respond():
@@ -202,15 +206,11 @@ def chatbot_respond():
     if not current_user.is_authenticated:
         return jsonify({"response": "Please log in to access budgeting assistance."})
 
-    # Debugging statement to check the value of current_user.salary
-    print(f"Debug: current_user.salary = {current_user.salary}")
-
-    # Extract financial data
-    user_income = current_user.salary or 0  
+    # --- Pull financial data from the user ---
+    user_income = current_user.salary or 0
     user_savings = current_user.calculate_savings()
     total_debt = db.session.query(db.func.sum(Debt.amount)).filter_by(user_id=current_user.id).scalar() or 0
 
-    # Expense categories formatted for AI model
     categories = {
         "rent": 0, "utilities": 0, "groceries": 0, "dining_out": 0,
         "entertainment": 0, "subscriptions": 0, "transportation": 0
@@ -221,53 +221,43 @@ def chatbot_respond():
         if category in categories:
             categories[category] += t.amount
 
-    bot_response = "I'm here to help with budgeting! Try asking about your savings or expenses."
+    # --- Format prompt for OpenRouter AI ---
+    prompt = (
+        f"My income is ${user_income:.2f}, my current savings are ${user_savings:.2f}, "
+        f"and my total debt is ${total_debt:.2f}.\n"
+        f"My expenses are as follows:\n" +
+        "\n".join([f"- {k.replace('_', ' ').title()}: ${v:.2f}" for k, v in categories.items()]) +
+        f"\n\nNow answer the question: '{user_message}'"
+    )
 
-    if "budget" in user_message:
-        bot_response = (
-            f"Your total savings: **${user_savings:.2f}**\n"
-            f"Your income: **${user_income:.2f}**\n"
-            f"Total expenses: **${sum(categories.values()):.2f}**\n"
-            f"Debt: **${total_debt:.2f}**\n"
-            "How can I assist?"
-        )
-
-    # **🔹 FIXED "Can I Afford" Filter 🔹**
-    elif re.search(r"\bcan i afford (\d+(\.\d{1,2})?)\b", user_message):
-        match = re.search(r"(\d+(\.\d{1,2})?)", user_message)
-        if match:
-            purchase_price = float(match.group(1))  # Extracts the correct number
-
-            # **Prepare input for AI Model**
-            user_data = {
-                "income": user_income, "savings": user_savings, "debt": total_debt,
-                **categories  # Includes rent, utilities, groceries, etc.
+    # --- Call OpenRouter API ---
+    try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "openai/gpt-3.5-turbo",  # Use a supported model
+                "messages": [
+                    {"role": "system", "content": "You are a helpful budgeting assistant."},
+                    {"role": "user", "content": prompt}
+                ]
             }
-            feature_columns = ["income", "rent", "utilities", "groceries", "dining_out", 
-                               "entertainment", "subscriptions", "transportation", 
-                               "savings", "debt"]
-            user_df = pd.DataFrame([user_data])[feature_columns]
-            user_scaled = scaler.transform(user_df)
+        )
+        response_json = response.json()
+        print("OpenRouter response:", response_json)
 
-            # **AI Prediction**
-            prediction = model.predict(user_scaled)[0]  # 1 = Affordable, 0 = Not Affordable
+        api_reply = response_json.get("choices", [{}])[0].get("message", {}).get("content", "AI did not respond.")
+    except Exception as e:
+        print("Chatbot error:", e)
+        print("Full response:", response.text if 'response' in locals() else 'No response received')
+        api_reply = "There was an error getting a response from the AI."
 
-            if prediction == 0:
-                bot_response = f"Yes! You can afford **${purchase_price:.2f}**. Would you like a savings plan?"
-            else:
-                bot_response = (
-                    f"This purchase of **${purchase_price:.2f}** might be risky.\n"
-                    f"Your savings: **${user_savings:.2f}** | Debt: **${total_debt:.2f}**\n"
-                    "Would you like alternative suggestions?"
-                )
-        else:
-            bot_response = "Please specify an amount, e.g., 'Can I afford 50?'"
-
-    # **Ensure response is always returned**
-    session.setdefault('chat_history', []).append({"user": user_message, "bot": bot_response})
-    return jsonify({"response": bot_response, "history": session['chat_history']})
-
-
+    # Save the exchange to session history
+    session.setdefault('chat_history', []).append({"user": user_message, "bot": api_reply})
+    return jsonify({"response": api_reply, "history": session['chat_history']})
 
 from AI_models.train_stock_model import train_stock_model
 from AI_models.predict_stock import predict_stock
