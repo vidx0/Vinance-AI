@@ -2,7 +2,7 @@ import requests
 import time
 import numpy as np
 
-API_KEY = "your_api_key_here"  # Replace with your actual API key
+API_KEY = "cf96f0e06e204e16885d2256742722a9"  # Replace with your actual API key
 NEWS_API_URL = "https://newsapi.org/v2/everything?q={}&apiKey={}"
 
 from textblob import TextBlob

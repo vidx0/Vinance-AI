@@ -1,10 +1,15 @@
 {% extends "layout.html" %} {% block title %}Budget Overview{% endblock %} {%
-block content %}
+block styles %}
+<link
+	rel="stylesheet"
+	href="{{ url_for('static', filename='css/index.css') }}"
+/>
+{% endblock %} {% block content %}
 <div class="container">
 	<h1 class="my-4">Budget Overview</h1>
 
-	<!-- Summary Cards -->
-	<div class="row mb-4">
+	<!-- ROW 1: Summary Totals -->
+	<div class="row_mb-4">
 		<div class="col-md-4">
 			<div class="card text-white bg-success">
 				<div class="card-body">
@@ -31,53 +36,54 @@ block content %}
 		</div>
 	</div>
 
-	<!-- Paycheck Information -->
-	<div class="card mb-4">
-		<div class="card-body">
-			<h3 class="card-title">Next Paycheck</h3>
-			{% if next_paycheck %}
-			<p class="card-text">{{ next_paycheck.strftime('%B %d, %Y') }}</p>
-			{% else %}
-			<p class="card-text text-muted">No paycheck information available</p>
-			{% endif %}
-		</div>
-	</div>
-
-	<!-- Add Transaction Forms -->
-	<div class="row mb-4">
-		<!-- Add Income Form -->
-		<div class="col-md-6">
-			<div class="card">
-				<div class="card-body">
-					<h4 class="card-title">Add Paycheck</h4>
-					<form action="{{ url_for('add_income') }}" method="POST">
-						<div class="mb-3">
-							<label class="form-label">Amount</label>
-							<input
-								type="number"
-								class="form-control"
-								name="amount"
-								step="0.01"
-								required
-							/>
-						</div>
-						<div class="mb-3">
-							<label class="form-label">Pay Frequency</label>
-							<select class="form-select" name="pay_frequency" required>
-								<option value="weekly">Weekly</option>
-								<option value="biweekly">Bi-Weekly</option>
-								<option value="monthly">Monthly</option>
-							</select>
-						</div>
-						<button type="submit" class="btn btn-success">Add Paycheck</button>
-					</form>
-				</div>
+	<!-- ROW 2: Everything Else (full-width column) -->
+	<!-- Row 1: Left = Paycheck info + Add Paycheck | Right = Add Expense -->
+	<div class="row">
+		<!-- Left Column -->
+		<!-- Paycheck Info -->
+		<div class="card mb-4">
+			<div class="card-body">
+				<h3 class="card-title">Next Paycheck</h3>
+				{% if next_paycheck %}
+				<p class="card-text">{{ next_paycheck.strftime('%B %d, %Y') }}</p>
+				{% else %}
+				<p class="card-text text-muted">No paycheck information available</p>
+				{% endif %}
 			</div>
 		</div>
 
-		<!-- Add Expense Form -->
+		<!-- Add Income Form -->
+		<div class="card mb-4">
+			<div class="card-body">
+				<h4 class="card-title">Add Paycheck</h4>
+				<form action="{{ url_for('add_income') }}" method="POST">
+					<div class="mb-3">
+						<label class="form-label">Amount</label>
+						<input
+							type="number"
+							class="form-control"
+							name="amount"
+							step="0.01"
+							required
+						/>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Pay Frequency</label>
+						<select class="form-select" name="pay_frequency" required>
+							<option value="weekly">Weekly</option>
+							<option value="biweekly">Bi-Weekly</option>
+							<option value="monthly">Monthly</option>
+						</select>
+					</div>
+					<button type="submit" class="btn btn-success">Add Paycheck</button>
+				</form>
+			</div>
+		</div>
+
+		<!-- Right Column -->
 		<div class="col-md-6">
-			<div class="card">
+			<!-- Add Expense Form -->
+			<div class="card mb-4">
 				<div class="card-body">
 					<h4 class="card-title">Add Expense</h4>
 					<form action="{{ url_for('add_expense') }}" method="POST">
@@ -111,43 +117,49 @@ block content %}
 		</div>
 	</div>
 
-	<!-- Transactions List -->
-	<div class="card">
-		<div class="card-body">
-			<h3 class="card-title">Recent Transactions</h3>
-			{% if transactions %}
-			<div class="table-responsive">
-				<table class="table table-striped">
-					<thead>
-						<tr>
-							<th>Date</th>
-							<th>Type</th>
-							<th>Category</th>
-							<th>Amount</th>
-						</tr>
-					</thead>
-					<tbody>
-						{% for transaction in transactions %}
-						<tr>
-							<td>{{ transaction.date.strftime('%m/%d/%Y') }}</td>
-							<td>
-								<span
-									class="badge {% if transaction.type == 'income' %}bg-success{% else %}bg-danger{% endif %}"
-								>
-									{{ transaction.type|title }}
-								</span>
-							</td>
-							<td>{{ transaction.category }}</td>
-							<td>${{ "%.2f"|format(transaction.amount) }}</td>
-						</tr>
-						{% endfor %}
-					</tbody>
-				</table>
+	<!-- Row 2: Full-width Transactions -->
+	<div class="row_transaction">
+		<div class="col-12">
+			<div class="card">
+				<div class="card-body">
+					<h3 class="card-title">Recent Transactions</h3>
+					{% if transactions %}
+					<div class="table-responsive">
+						<table class="table table-striped">
+							<thead>
+								<tr>
+									<th>Date</th>
+									<th>Type</th>
+									<th>Category</th>
+									<th>Amount</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for transaction in transactions %}
+								<tr>
+									<td>{{ transaction.date.strftime('%m/%d/%Y') }}</td>
+									<td>
+										<span
+											class="badge {% if transaction.type == 'income' %}bg-success{% else %}bg-danger{% endif %}"
+										>
+											{{ transaction.type|title }}
+										</span>
+									</td>
+									<td>{{ transaction.category }}</td>
+									<td>${{ "%.2f"|format(transaction.amount) }}</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+					{% else %}
+					<p class="text-muted">No transactions recorded yet.</p>
+					{% endif %}
+				</div>
 			</div>
-			{% else %}
-			<p class="text-muted">No transactions recorded yet.</p>
-			{% endif %}
 		</div>
 	</div>
+
+	<!-- main row -->
 </div>
 {% endblock %}

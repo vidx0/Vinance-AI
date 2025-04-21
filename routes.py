@@ -197,7 +197,7 @@ scaler = joblib.load("AI_models/scaler.pkl")
 import requests
 
 
-OPENROUTER_API_KEY = "sk-replace"  # Replace with your actual OpenRouter API key
+OPENROUTER_API_KEY = "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"  # Replace with your actual OpenRouter API key
 
 @app.route('/chatbot/respond', methods=['POST'])
 def chatbot_respond():
@@ -212,8 +212,14 @@ def chatbot_respond():
     total_debt = db.session.query(db.func.sum(Debt.amount)).filter_by(user_id=current_user.id).scalar() or 0
 
     categories = {
-        "rent": 0, "utilities": 0, "groceries": 0, "dining_out": 0,
-        "entertainment": 0, "subscriptions": 0, "transportation": 0
+    "housing": 0,
+    "food": 0,
+    "transportation": 0,
+    "entertainment": 0,
+    "utilities": 0,
+    "healthcare": 0,
+    "subscriptions": 0,
+    "other": 0
     }
     transactions = Transaction.query.filter_by(user_id=current_user.id, type='expense').all()
     for t in transactions:
@@ -226,6 +232,7 @@ def chatbot_respond():
         f"My income is ${user_income:.2f}, my current savings are ${user_savings:.2f}, "
         f"and my total debt is ${total_debt:.2f}.\n"
         f"My expenses are as follows:\n" +
+        f"You are a helpful AI budgeting assistant. Always use clear, friendly language, include real numbers when possible, and suggest financing or flexible payment options when relevant.\n" +
         "\n".join([f"- {k.replace('_', ' ').title()}: ${v:.2f}" for k, v in categories.items()]) +
         f"\n\nNow answer the question: '{user_message}'"
     )
