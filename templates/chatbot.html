@@ -1,6 +1,9 @@
 {% extends 'layout.html' %} {% block title %}AI Chatbot{% endblock %} {% block
-content %}
-<h1>AI Chatbot</h1>
+styles %}<link
+	rel="stylesheet"
+	href="{{ url_for('static', filename='css/chatbot.css') }}"
+/>{% endblock %}{% block content %}
+<br />
 <div id="chatbot-container">
 	<div id="chatbox"></div>
 	<div id="input-area">

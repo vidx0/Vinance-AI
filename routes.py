@@ -197,7 +197,7 @@ scaler = joblib.load("AI_models/scaler.pkl")
 import requests
 
 
-OPENROUTER_API_KEY = "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"  # Replace with your actual OpenRouter API key
+OPENROUTER_API_KEY = "key"  # Replace with your actual OpenRouter API key
 
 @app.route('/chatbot/respond', methods=['POST'])
 def chatbot_respond():
